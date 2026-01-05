@@ -17,6 +17,7 @@ export default function AccountBalanceList({
     <div className="grid md:grid-cols-3 gap-3">
       {accounts.map(a => {
         const balance = getAccountBalance(a.id, expenses, transfers)
+        console.log(balance)
         return (
           <div key={a.id} className="border rounded p-3">
             <div className="font-medium">{a.name}</div>

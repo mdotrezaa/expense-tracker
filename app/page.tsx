@@ -5,8 +5,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage"
 
 import { Expense } from "@/types/expense"
 import { Category } from "@/types/category"
-import { Account } from "@/types/accounts"
-import { Transfer } from "@/types/transfer"
+import { Account, Transfer } from "@/types/accounts"
 
 import { getMonthKey } from "@/lib/utils"
 
