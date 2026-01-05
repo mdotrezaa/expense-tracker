@@ -43,7 +43,7 @@ export default function AccountManagerModal({
   }
 
   const remove = (id: string) => {
-    if (expenses.some(e => e.accountId === id)) {
+    if (expenses.some(e => e.account === id)) {
       alert("Account is used")
       return
     }
