@@ -24,7 +24,7 @@ export default function CategoryDonutChart({
   selectedCategoryId,
   onSelectCategory
 }: Props) {
-  const totalAll = expenses.reduce((s, e) => s + e.amount, 0)
+  const totalAll = expenses.filter(t=> t.type === 'expense').reduce((s, e) => s + e.amount, 0)
 
   const data = categories
     .map((c) => {

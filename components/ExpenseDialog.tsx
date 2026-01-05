@@ -1,64 +1,62 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectItem
-} from "@/components/ui/select"
+  SelectItem,
+} from "@/components/ui/select";
 
-import { Category } from "@/types/category"
-import { Account } from "@/types/accounts"
-import { Expense } from "@/types/expense"
+import { Category } from "@/types/category";
+import { Account } from "@/types/accounts";
+import { Expense } from "@/types/expense";
 
 export default function ExpenseDialog({
   open,
   onOpenChange,
   categories,
   accounts,
-  onAdd
+  onAdd,
 }: {
-  open: boolean
-  onOpenChange: (v: boolean) => void
-  categories: Category[]
-  accounts: Account[]
-  onAdd: (e: Expense) => void
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  categories: Category[];
+  accounts: Account[];
+  onAdd: (e: Expense) => void;
 }) {
-  const [type, setType] = useState<"expense" | "income">("expense")
-  const [title, setTitle] = useState("")
-  const [amount, setAmount] = useState("")
+  const [type, setType] = useState<"expense" | "income">("expense");
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<string | undefined>(
-    categories[0]?.id
-  )
-  const [account, setAccount] = useState<string | undefined>(
-    accounts[0]?.id
-  )
+    categories[0]?.id,
+  );
+  const [account, setAccount] = useState<string | undefined>(accounts[0]?.id);
   const [toAccount, setToAccount] = useState<string | undefined>(
-    accounts[0]?.id
-  )
+    accounts[0]?.id,
+  );
 
   const reset = () => {
-    setTitle("")
-    setAmount("")
-    setType("expense")
-    setCategory(categories[0]?.id)
-    setAccount(accounts[0]?.id)
-    setToAccount(accounts[0]?.id)
-  }
+    setTitle("");
+    setAmount("");
+    setType("expense");
+    setCategory(categories[0]?.id);
+    setAccount(accounts[0]?.id);
+    setToAccount(accounts[0]?.id);
+  };
 
   const submit = () => {
-    if (!title || !amount || !account) return
+    if (!title || !amount || !account) return;
 
     onAdd({
       id: crypto.randomUUID(),
@@ -68,12 +66,12 @@ export default function ExpenseDialog({
       category: type === "expense" ? category : undefined,
       account,
       toAccount: type === "income" ? toAccount : undefined,
-      date: new Date().toISOString()
-    })
+      date: new Date().toISOString(),
+    });
 
-    reset()
-    onOpenChange(false)
-  }
+    reset();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,33 +109,35 @@ export default function ExpenseDialog({
 
           {/* Category */}
           {type === "expense" && (
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+            <>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          {/* Account */}
-          <Select value={account} onValueChange={setAccount}>
-            <SelectTrigger>
-              <SelectValue placeholder="Account" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              {/* Account */}
+              <Select value={account} onValueChange={setAccount}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
 
           {/* Income → To Account */}
           {type === "income" && (
@@ -161,5 +161,5 @@ export default function ExpenseDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
