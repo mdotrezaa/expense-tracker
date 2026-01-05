@@ -34,10 +34,10 @@ export function getAccountBalance(
 
   /* ===== Transfers ===== */
   for (const t of transfers) {
-    if (t.fromAccount === accountId) {
+    if (t.from === accountId) {
       balance -= t.amount
     }
-    if (t.toAccount === accountId) {
+    if (t.to === accountId) {
       balance += t.amount
     }
   }
