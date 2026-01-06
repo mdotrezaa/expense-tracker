@@ -39,7 +39,7 @@ import {
   Settings,
   Plus,
   EllipsisVertical,
-  PiggyBank
+  PiggyBank,
 } from "lucide-react";
 import GoalDialog from "@/components/GoalDialog";
 import GoalList from "@/components/GoalList";
@@ -131,49 +131,62 @@ export default function HomePage() {
     <>
       {/* ===== App Header ===== */}
       <header className="sticky top-0 z-20 bg-background border-b">
-        <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="font-semibold text-lg">💸 Expense Tracker</h1>
-          <div className="flex items-center space-x-2">
-            <MonthPicker value={month} onChange={setMonth} />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost">
-                  <EllipsisVertical />
-                </Button>
-              </DropdownMenuTrigger>
+        <div className="px-4 py-3">
+          {/* Top row */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* Title */}
+            <h1 className="font-semibold text-lg whitespace-nowrap">
+              💸 Expense Tracker
+            </h1>
 
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() =>
-                    exportExpensesCsv({
-                      expenses,
-                      categories,
-                      accounts,
-                      month,
-                    })
-                  }
-                >
-                  Export CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    exportExpensesXlsx({
-                      expenses,
-                      categories,
-                      accounts,
-                      month,
-                    })
-                  }
-                >
-                  Export XLSX
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Controls */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 sm:flex-none">
+                <MonthPicker value={month} onChange={setMonth} />
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="ghost">
+                    <EllipsisVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      exportExpensesCsv({
+                        expenses,
+                        categories,
+                        accounts,
+                        month,
+                      })
+                    }
+                  >
+                    Export CSV
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() =>
+                      exportExpensesXlsx({
+                        expenses,
+                        categories,
+                        accounts,
+                        month,
+                      })
+                    }
+                  >
+                    Export XLSX
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
 
+        {/* Summary */}
         {tab === "home" && (
-          <div className="text-center pb-3">
+          <div className="pb-3 text-center sm:text-left px-4">
             <p className="text-sm text-muted-foreground">This month</p>
             <p className="text-2xl font-bold">
               Rp {total.toLocaleString("id-ID")}
