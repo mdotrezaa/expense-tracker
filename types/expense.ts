@@ -3,9 +3,10 @@ export type Expense = {
   id: string
   title: string
   amount: number
-  type: "income" | "expense"
+  type: "income" | "expense" | "saving"
   category?: string
   account: string        // primary account
   toAccount?: string     // only for income (optional)
   date: string
+  goalId?: string;       // optional goal association
 }

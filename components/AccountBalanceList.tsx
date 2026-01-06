@@ -22,7 +22,7 @@ export default function AccountBalanceList({
           <div key={a.id} className="border rounded p-3">
             <div className="font-medium">{a.name}</div>
             <div className={`text-lg font-bold ${balance < 0 ? "text-red-500" : ""}`}>
-              Rp {balance.toLocaleString()}
+              Rp {balance.toLocaleString("id-ID")}
             </div>
           </div>
         )

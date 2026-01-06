@@ -91,10 +91,9 @@ export default function IncomeExpenseDonut({
             </Pie>
 
             <Tooltip
-              formatter={(value) => {
-                if (typeof value !== "number") return "Rp 0"
-                const pct = ((value / total) * 100).toFixed(1)
-                return [`Rp ${value.toLocaleString()} (${pct}%)`, ""]
+              formatter={(value: number, name: string) => {
+                const pct = ((value / total) * 100).toFixed(1);
+                return [`Rp ${value.toLocaleString("id-ID")} (${pct}%)`, name];
               }}
             />
           </PieChart>

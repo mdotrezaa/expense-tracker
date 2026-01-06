@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 
 import { Category } from "@/types/category";
-import { Account } from "@/types/accounts";
+import { Account, Goal } from "@/types/accounts";
 import { Expense } from "@/types/expense";
 
 export default function ExpenseDialog({
@@ -28,14 +28,18 @@ export default function ExpenseDialog({
   categories,
   accounts,
   onAdd,
+  goals,
+  onGoalAdd,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   categories: Category[];
   accounts: Account[];
   onAdd: (e: Expense) => void;
+  goals: Goal[];
+  onGoalAdd?: (goalId: string, amount: number) => void;
 }) {
-  const [type, setType] = useState<"expense" | "income">("expense");
+  const [type, setType] = useState<"expense" | "income" | "saving">("expense");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<string | undefined>(
@@ -45,6 +49,7 @@ export default function ExpenseDialog({
   const [toAccount, setToAccount] = useState<string | undefined>(
     accounts[0]?.id,
   );
+  const [goalId, setGoalId] = useState<string | undefined>();
 
   const reset = () => {
     setTitle("");
@@ -58,6 +63,7 @@ export default function ExpenseDialog({
   const submit = () => {
     if (!title || !amount || !account) return;
 
+    // Update submit
     onAdd({
       id: crypto.randomUUID(),
       title,
@@ -66,8 +72,14 @@ export default function ExpenseDialog({
       category: type === "expense" ? category : undefined,
       account,
       toAccount: type === "income" ? toAccount : undefined,
+      goalId: type === "saving" ? goalId : undefined, // NEW
       date: new Date().toISOString(),
     });
+
+    // Notify parent to update goal
+    if (type === "saving" && goalId && onGoalAdd) {
+      onGoalAdd(goalId, Number(amount));
+    }
 
     reset();
     onOpenChange(false);
@@ -89,6 +101,7 @@ export default function ExpenseDialog({
             <SelectContent>
               <SelectItem value="expense">Expense</SelectItem>
               <SelectItem value="income">Income</SelectItem>
+              <SelectItem value="saving">Saving</SelectItem> {/* NEW */}
             </SelectContent>
           </Select>
 
@@ -154,7 +167,20 @@ export default function ExpenseDialog({
               </SelectContent>
             </Select>
           )}
-
+          {type === "saving" && goals.length > 0 && (
+            <Select value={goalId} onValueChange={setGoalId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Add to Goal (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {goals.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>
+                    {g.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Button onClick={submit} className="w-full">
             Save
           </Button>

@@ -1,11 +1,12 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 import { Expense } from "@/types/expense";
 import { Category } from "@/types/category";
-import { Account, Transfer } from "@/types/accounts";
+import { Account, Goal, Transfer } from "@/types/accounts";
 
 import { getMonthKey } from "@/lib/utils";
 import { exportExpensesCsv } from "@/lib/exportCSV";
@@ -38,16 +39,16 @@ import {
   Settings,
   Plus,
   EllipsisVertical,
+  PiggyBank
 } from "lucide-react";
+import GoalDialog from "@/components/GoalDialog";
+import GoalList from "@/components/GoalList";
 
-/* =====================
-   Bottom Tabs
-===================== */
-type Tab = "home" | "charts" | "accounts" | "settings";
+type Tab = "home" | "charts" | "accounts" | "settings" | "savings";
 
 export default function HomePage() {
   /* =====================
-     Persistent State
+     Persistent State (client-only)
   ====================== */
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", []);
   const [categories, setCategories] = useLocalStorage<Category[]>(
@@ -61,6 +62,7 @@ export default function HomePage() {
     "transfers",
     [],
   );
+  const [goals, setGoals] = useLocalStorage<Goal[]>("goals", []);
 
   /* =====================
      UI State
@@ -76,18 +78,52 @@ export default function HomePage() {
   const [transferOpen, setTransferOpen] = useState(false);
 
   /* =====================
-     Derived Data
+     Client-side Derived Data
   ====================== */
-  const monthlyExpenses = expenses.filter((e) => getMonthKey(e.date) === month);
+  const [monthlyExpenses, setMonthlyExpenses] = useState<Expense[]>([]);
+  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
+  const [total, setTotal] = useState(0);
 
-  const filteredExpenses = monthlyExpenses.filter(
-    (e) =>
-      (!selectedCategory || e.category === selectedCategory) &&
-      (!selectedType || e.type === selectedType),
-  );
+  useEffect(() => {
+    const monthExp = expenses.filter((e) => getMonthKey(e.date) === month);
+    setMonthlyExpenses((prev) => {
+      const same =
+        prev.length === monthExp.length &&
+        prev.every((e, i) => e.id === monthExp[i].id);
+      return same ? prev : monthExp;
+    });
 
-  const total = filteredExpenses.reduce((s, e) => s + e.amount, 0);
+    const filtered = monthExp.filter(
+      (e) =>
+        (!selectedCategory || e.category === selectedCategory) &&
+        (!selectedType || e.type === selectedType),
+    );
+    setFilteredExpenses((prev) => {
+      const same =
+        prev.length === filtered.length &&
+        prev.every((e, i) => e.id === filtered[i].id);
+      return same ? prev : filtered;
+    });
 
+    const totalAmount = filtered.reduce((s, e) => {
+      if (e.type === "expense") return s - e.amount;
+      if (e.type === "income") return s + e.amount;
+      if (e.type === "saving") return s - e.amount; // or ignore if you want
+      return s;
+    }, 0);
+    setTotal(totalAmount);
+  }, [expenses, month, selectedCategory, selectedType]);
+
+  const handleGoalAdd = (goalId: string, amount: number) => {
+    setGoals((prev) =>
+      prev.map((g) =>
+        g.id === goalId ? { ...g, saved: g.saved + amount } : g,
+      ),
+    );
+  };
+  const handleGoalDelete = (id: string) => {
+    setGoals((prev) => prev.filter((g) => g.id !== id));
+  };
   /* =====================
      Render
   ====================== */
@@ -139,12 +175,14 @@ export default function HomePage() {
         {tab === "home" && (
           <div className="text-center pb-3">
             <p className="text-sm text-muted-foreground">This month</p>
-            <p className="text-2xl font-bold">Rp {total.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              Rp {total.toLocaleString("id-ID")}
+            </p>
           </div>
         )}
       </header>
 
-      {/* ===== Content ===== */}
+      {/* ===== Main Content ===== */}
       <main className="px-4 pt-4 pb-28 space-y-4 max-w-5xl mx-auto">
         {/* HOME */}
         {tab === "home" && (
@@ -152,9 +190,27 @@ export default function HomePage() {
             expenses={filteredExpenses}
             categories={categories}
             accounts={accounts}
-            onDelete={(id) =>
-              setExpenses((prev) => prev.filter((e) => e.id !== id))
-            }
+            goals={goals} // pass goals
+            onDelete={(id) => {
+              const expenseToDelete = expenses.find((e) => e.id === id);
+
+              // Remove the expense
+              setExpenses((prev) => prev.filter((e) => e.id !== id));
+
+              // If it's a saving linked to a goal, update that goal
+              if (
+                expenseToDelete?.type === "saving" &&
+                expenseToDelete.goalId
+              ) {
+                setGoals((prev) =>
+                  prev.map((g) =>
+                    g.id === expenseToDelete.goalId
+                      ? { ...g, saved: g.saved - expenseToDelete.amount }
+                      : g,
+                  ),
+                );
+              }
+            }}
           />
         )}
 
@@ -209,7 +265,18 @@ export default function HomePage() {
             </div>
           </>
         )}
+        {tab === "savings" && (
+          <Card>
+            <CardHeader className="flex justify-between">
+              <CardTitle>Savings Goals</CardTitle>
+              <GoalDialog onAdd={(g) => setGoals((prev) => [...prev, g])} />
+            </CardHeader>
 
+            <CardContent>
+              <GoalList goals={goals} onDelete={handleGoalDelete} />
+            </CardContent>
+          </Card>
+        )}
         {/* SETTINGS */}
         {tab === "settings" && (
           <Card>
@@ -228,12 +295,7 @@ export default function HomePage() {
                 variant="outline"
                 className="w-full"
                 onClick={() =>
-                  exportExpensesCsv({
-                    expenses,
-                    categories,
-                    accounts,
-                    month,
-                  })
+                  exportExpensesCsv({ expenses, categories, accounts, month })
                 }
               >
                 Export CSV
@@ -242,12 +304,7 @@ export default function HomePage() {
                 variant="outline"
                 className="w-full"
                 onClick={() =>
-                  exportExpensesXlsx({
-                    expenses,
-                    categories,
-                    accounts,
-                    month,
-                  })
+                  exportExpensesXlsx({ expenses, categories, accounts, month })
                 }
               >
                 Export XLSX
@@ -272,7 +329,7 @@ export default function HomePage() {
 
       {/* ===== Bottom Navigation ===== */}
       <nav className="fixed bottom-0 inset-x-0 bg-background border-t z-30">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           <BottomTab
             active={tab === "home"}
             icon={<Home />}
@@ -292,6 +349,12 @@ export default function HomePage() {
             onClick={() => setTab("accounts")}
           />
           <BottomTab
+            active={tab === "savings"}
+            icon={<PiggyBank />}
+            label="Savings"
+            onClick={() => setTab("savings")}
+          />
+          <BottomTab
             active={tab === "settings"}
             icon={<Settings />}
             label="Settings"
@@ -306,7 +369,11 @@ export default function HomePage() {
         onOpenChange={setExpenseOpen}
         categories={categories}
         accounts={accounts}
-        onAdd={(e) => setExpenses((prev) => [e, ...prev])}
+        goals={goals} // pass goals
+        onAdd={(e) => {
+          setExpenses((prev) => [e, ...prev]);
+          if (e.goalId) handleGoalAdd(e.goalId, e.amount);
+        }}
       />
 
       <CategoryManagerModal
